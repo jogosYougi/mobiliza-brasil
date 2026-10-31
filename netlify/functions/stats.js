@@ -48,6 +48,10 @@ function classify(raw) {
     const id = u.searchParams.get("id");
     return id && /^\d{1,9}$/.test(id) ? { kind: "ideia", id } : null;
   }
+  if (/^(www12|www25|www)\.senado\.(leg|gov)\.br$/.test(h) && /\/ecidadania\/visualizacaomateria/i.test(u.pathname)) {
+    const id = u.searchParams.get("id");
+    return id && /^\d{1,9}$/.test(id) ? { kind: "materia", id } : null;
+  }
   return null;
 }
 
@@ -186,6 +190,30 @@ async function ideia(id) {
   return { kind: "ideia", fonte: "Senado Federal — e-Cidadania", ...p };
 }
 
+/* ---------- Senado e-Cidadania: Consulta Pública de uma matéria (PL, PEC...) ---------- */
+function parseMateria(html) {
+  const text = String(html)
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&atilde;/gi, "ã").replace(/\s+/g, " ");
+  const m = text.match(/\bSim\s+N[ãa]o\s+(\d{1,3}(?:\.\d{3})*)\s+(\d{1,3}(?:\.\d{3})*)/i);
+  if (!m) return null;
+  const d = text.match(/Votos apurados at[ée]\s+(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}:\d{2})/i);
+  const t = text.match(/(PROJETO DE LEI[^(]{0,40}|PROPOSTA DE EMENDA[^(]{0,60}|MEDIDA PROVIS[^(]{0,40})\(([^)]{3,30})\)/i);
+  return {
+    sim: parseInt(m[1].replace(/\./g, ""), 10),
+    nao: parseInt(m[2].replace(/\./g, ""), 10),
+    apuradoEm: d ? `${d[3]}-${d[2]}-${d[1]} ${d[4]}` : null,
+    reference: t ? t[2].trim() : null
+  };
+}
+
+async function materia(id) {
+  const html = await (await http(`https://www12.senado.leg.br/ecidadania/visualizacaomateria?id=${id}`, "text/html")).text();
+  const p = parseMateria(html);
+  if (!p) throw new Error("votos não encontrados na página");
+  return { kind: "materia", fonte: "Senado Federal — e-Cidadania (consulta pública)", ...p };
+}
+
 /* ---------- handler ---------- */
 exports.handler = async (event) => {
   const base = { "content-type": "application/json; charset=utf-8" };
@@ -194,11 +222,11 @@ exports.handler = async (event) => {
   const c = classify((event.queryStringParameters || {}).url);
   if (!c) return { statusCode: 200, headers: ok, body: JSON.stringify({ ok: false, reason: "unsupported" }) };
   try {
-    const data = c.kind === "camara" ? await camara(c.id) : await ideia(c.id);
+    const data = c.kind === "camara" ? await camara(c.id) : c.kind === "materia" ? await materia(c.id) : await ideia(c.id);
     return { statusCode: 200, headers: ok, body: JSON.stringify({ ok: true, ...data, lidoEm: new Date().toISOString() }) };
   } catch (e) {
     return { statusCode: 200, headers: no, body: JSON.stringify({ ok: false, reason: "upstream" }) };
   }
 };
 
-exports.__test = { classify, parseIdeia, parseEnquete, camara, ideia };
+exports.__test = { classify, parseIdeia, parseMateria, parseEnquete, camara, ideia };

@@ -184,3 +184,6 @@ A geometria dos 27 estados está em `data/brasil-estados.geojson` (malha municip
 
 ## Enquete da Câmara
 Links `camara.leg.br/enquetes/{id}` (ou `/resultados`) mostram as 5 opções (concordo totalmente … discordo totalmente), lidas da página pública de resultados.
+
+## Consulta pública do Senado (PL, PEC…)
+Links `www12.senado.leg.br/ecidadania/visualizacaomateria?id=…` mostram os votos Sim/Não da consulta pública, lidos da página oficial.
