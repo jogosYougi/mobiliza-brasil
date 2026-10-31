@@ -41,6 +41,7 @@ function classify(raw) {
   if (h === "www.camara.leg.br" || h === "camara.leg.br") {
     let id = u.searchParams.get("idProposicao");
     if (!id) { const m = u.pathname.match(/\/propostas-legislativas\/(\d+)/i); if (m) id = m[1]; }
+    if (!id) { const m = u.pathname.match(/^\/enquetes\/(\d+)(?:\/resultados)?\/?$/i); if (m) id = m[1]; }
     return id && /^\d{1,9}$/.test(id) ? { kind: "camara", id } : null;
   }
   if (/^(www12|www25|www)\.senado\.(leg|gov)\.br$/.test(h) && /\/ecidadania\/visualizacaoideia/i.test(u.pathname)) {
@@ -48,6 +49,45 @@ function classify(raw) {
     return id && /^\d{1,9}$/.test(id) ? { kind: "ideia", id } : null;
   }
   return null;
+}
+
+/* ---------- Câmara: enquete pública (opinião popular) ---------- */
+const OPCOES = [
+  ["concordo totalmente", "Concordo totalmente"],
+  ["concordo na maior parte", "Concordo na maior parte"],
+  ["estou indeciso", "Estou indeciso"],
+  ["discordo na maior parte", "Discordo na maior parte"],
+  ["discordo totalmente", "Discordo totalmente"]
+];
+
+function parseEnquete(html) {
+  const h = String(html);
+  const found = new Map();
+  for (const tr of h.match(/<tr[\s\S]*?<\/tr>/gi) || []) {
+    const cells = (tr.match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || []).map((c) =>
+      c.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim());
+    if (cells.length < 2) continue;
+    const k = norm(cells[0]);
+    const op = OPCOES.find((o) => o[0] === k);
+    const n = cells[1].replace(/[^\d]/g, "");
+    if (op && n && !found.has(op[0])) found.set(op[0], parseInt(n, 10));
+  }
+  if (found.size < 3) return null;
+  const itens = OPCOES.map(([k, rotulo]) => ({ rotulo, votos: found.get(k) || 0 }));
+  const total = itens.reduce((a, i) => a + i.votos, 0);
+  if (!total) return null;
+  itens.forEach((i) => { i.pct = Math.round((i.votos / total) * 1000) / 10; });
+  const text = h.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ");
+  const d = text.match(/desde\s+(\d{2}\/\d{2}\/\d{4})/i);
+  return { itens, total, desde: d ? d[1] : null };
+}
+
+async function enquete(id) {
+  try {
+    const html = await (await http(`https://www.camara.leg.br/enquetes/${id}/resultados`, "text/html")).text();
+    const e = parseEnquete(html);
+    return e ? { ...e, url: `https://www.camara.leg.br/enquetes/${id}` } : null;
+  } catch { return null; }
 }
 
 /* ---------- Câmara ---------- */
@@ -82,13 +122,16 @@ async function camaraVotos(votId) {
 }
 
 async function camara(id) {
-  const [det, aut, vots] = await Promise.allSettled([
+  const [det, aut, vots, enq] = await Promise.allSettled([
     getJson(`${CAM}/proposicoes/${id}`),
     getJson(`${CAM}/proposicoes/${id}/autores`),
-    camaraLista(id)
+    camaraLista(id),
+    enquete(id)
   ]);
+  const en = enq.status === "fulfilled" ? enq.value : null;
   const d = det.status === "fulfilled" && det.value && det.value.dados;
-  if (!d) throw new Error("proposição não encontrada");
+  if (!d && !en) throw new Error("proposição não encontrada");
+  if (!d) return { kind: "camara", fonte: "Câmara dos Deputados", enquete: en, votacao: null };
   const st = d.statusProposicao || {};
   const nomes = aut.status === "fulfilled" ? ((aut.value && aut.value.dados) || []).map((a) => a.nome).filter(Boolean) : [];
   const out = {
@@ -100,6 +143,7 @@ async function camara(id) {
     orgao: st.siglaOrgao || null,
     apresentacao: isoDate(d.dataApresentacao),
     autor: nomes.length ? (nomes.length > 1 ? `${nomes[0]} e mais ${nomes.length - 1}` : nomes[0]) : null,
+    enquete: en,
     votacao: null
   };
   const lista = vots.status === "fulfilled" ? vots.value.slice() : [];
@@ -157,4 +201,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports.__test = { classify, parseIdeia, camara, ideia };
+exports.__test = { classify, parseIdeia, parseEnquete, camara, ideia };

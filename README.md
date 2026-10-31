@@ -178,3 +178,11 @@ Também preenche número e resumo do formulário quando o link é da Câmara.
 - Cores: variáveis no topo de `css/style.css` (`--brand`, `--accent`).
 - Texto da mensagem de compartilhamento: função `shareText` em `js/app.js`.
 - Estados/UF: lista em `js/utils.js`.
+
+## Mapa mais rápido (opcional)
+Baixe o GeoJSON dos estados no IBGE e salve como `data/brasil-estados.geojson`:
+https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?intrarregiao=UF&qualidade=minima&formato=application/vnd.geo+json
+Com o arquivo no repositório o mapa carrega na hora; sem ele, o site tenta o IBGE (4 s) e usa o mapa em blocos.
+
+## Enquete da Câmara
+Links `camara.leg.br/enquetes/{id}` (ou `/resultados`) mostram as 5 opções (concordo totalmente … discordo totalmente), lidas da página pública de resultados.
