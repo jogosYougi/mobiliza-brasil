@@ -38,6 +38,13 @@ window.MBOficial = (function () {
     if (!d || !d.ok) return "";
     let body = "";
     if (d.kind === "camara") {
+      if (d.enquete) {
+        const e = d.enquete, cls = ["y", "y2", "m", "n2", "n"];
+        body += `<div class="enq"><b>Enquete pública da Câmara</b> · ${nf(e.total)} participações${e.desde ? " desde " + esc(e.desde) : ""}
+          ${e.itens.map((i, k) => `<div class="eq"><span>${esc(i.rotulo)}</span><span>${nf(i.votos)} (${String(i.pct).replace(".", ",")}%)</span>
+            <div class="vbar"><i class="${cls[k]}" style="width:${i.pct}%"></i></div></div>`).join("")}
+          <div class="src">Opinião de quem participou da enquete; não é a votação dos deputados.</div></div>`;
+      }
       if (d.situacao) body += row("Situação", d.situacao);
       if (d.orgao) body += row("Onde está", d.orgao);
       if (d.autor) body += row("Autoria", d.autor);

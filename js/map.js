@@ -8,6 +8,7 @@
   const IBGE_UF = { 11: "RO", 12: "AC", 13: "AM", 14: "RR", 15: "PA", 16: "AP", 17: "TO", 21: "MA", 22: "PI", 23: "CE", 24: "RN", 25: "PB",
     26: "PE", 27: "AL", 28: "SE", 29: "BA", 31: "MG", 32: "ES", 33: "RJ", 35: "SP", 41: "PR", 42: "SC", 43: "RS", 50: "MS", 51: "MT", 52: "GO", 53: "DF" };
   const GEO_URLS = [
+    "data/brasil-estados.geojson",   // opcional: cópia local (carrega na hora)
     "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?intrarregiao=UF&qualidade=minima&formato=application/vnd.geo+json",
     "https://servicodados.ibge.gov.br/api/v2/malhas/BR?resolucao=2&qualidade=minima&formato=application/vnd.geo+json"
   ];
@@ -69,7 +70,7 @@
     } catch { }
     for (const url of GEO_URLS) {
       try {
-        const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 10000);
+        const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), url.startsWith('http') ? 4000 : 3000);
         const r = await fetch(url, { signal: ctl.signal }); clearTimeout(t);
         if (!r.ok) continue;
         const states = buildStates(await r.json());
