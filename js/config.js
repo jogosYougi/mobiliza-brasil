@@ -10,6 +10,6 @@
 //  (dados salvos só no seu navegador) para você testar o visual.
 // =====================================================================
 window.MOBILIZA_CONFIG = {
-  SUPABASE_URL: "https://nwegyzaqrfmmyuxnsslk.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53ZWd5emFxcmZtbXl1eG5zc2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MTY5MDUsImV4cCI6MjEwODk5MjkwNX0.57k9EvjB1U9xO36C08DuI12Vh9CaBxKl6jhNLhs5_Qs"
+  SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
+  SUPABASE_ANON_KEY: "SUA-CHAVE-ANON-PUBLIC"
 };

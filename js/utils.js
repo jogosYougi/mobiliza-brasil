@@ -43,7 +43,17 @@ window.MB = (function () {
     return { url: u.href, lat, lng };
   }
 
-  const mapsFromCoords = (lat, lng) => `https://www.google.com/maps?q=${lat},${lng}`;
+  // Só aceita links https de sites oficiais do governo/legislativo (.gov.br e .leg.br)
+  function parseGovLink(raw) {
+    let u;
+    try { u = new URL(String(raw).trim()); } catch { return null; }
+    if (u.protocol !== "https:" || u.username || u.password || u.port) return null;
+    if (!/^([a-z0-9-]+\.)*(leg|gov)\.br$/i.test(u.hostname)) return null;
+    if (u.href.length > 500) return null;
+    return { url: u.href, host: u.hostname.replace(/^www\d*\./i, "") };
+  }
+
+  const mapsFromCoords =(lat, lng) => `https://www.google.com/maps?q=${lat},${lng}`;
   const mapsFromText = (m) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${m.venue}, ${m.city} - ${m.state}, Brasil`)}`;
   const mapsLink = (m) => m.maps_url || (m.lat != null && m.lng != null ? mapsFromCoords(m.lat, m.lng) : mapsFromText(m));
 
@@ -56,5 +66,5 @@ window.MB = (function () {
 
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-  return { STATES, esc, todayISO, fmtDate, fmtTime, dayOf, monthOf, weekday, parseMapsLink, mapsFromCoords, mapsLink, toast, norm };
+  return { STATES, esc, todayISO, fmtDate, fmtTime, dayOf, monthOf, weekday, parseMapsLink, parseGovLink, mapsFromCoords, mapsLink, toast, norm };
 })();
