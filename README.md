@@ -13,7 +13,6 @@ Site estático (HTML + CSS + JS puro) + banco de dados **Supabase** (PostgreSQL)
 | Pedido de exclusão por qualquer visitante | cartão do ato → "Solicitar exclusão" |
 | **Propostas legislativas** (PL, PEC, ideias): cadastro, filtros, botão "Votar no site oficial", compartilhar, pedir exclusão. **O site não registra votos.** | `propostas.html` + `js/propostas.js` |
 | **Mapa interativo do Brasil** na página inicial: clique em um estado para filtrar (ele é destacado e o mapa dá zoom), pontos nas cidades com ato | `js/map.js` |
-| **Dados oficiais** nos cartões de propostas: situação, autoria, votos Sim/Não dos deputados (Câmara) e apoios de ideias (e-Cidadania) | `netlify/functions/stats.js` + `js/oficial.js` |
 | Painel de moderação (pedidos de exclusão de atos e propostas, remover/restaurar) | `admin.html` + `js/admin.js` |
 | Tabelas, regras de segurança e função de moderação | `database/schema.sql` |
 | Módulo de propostas no banco (rodar **depois** do schema.sql) | `database/propostas.sql` |
@@ -31,13 +30,11 @@ mobiliza-brasil/
 │   ├── app.js          # lógica do site
 │   ├── propostas.js    # lógica da página de propostas
 │   ├── map.js          # mapa interativo do Brasil
-│   ├── oficial.js      # mostra os dados oficiais nos cartões
 │   ├── admin.js        # lógica do painel
 │   └── utils.js
 ├── database/schema.sql    # ← rodar no Supabase (1º)
 ├── database/propostas.sql # ← rodar no Supabase (2º, depois do schema.sql)
 ├── database/mapa.sql      # ← rodar no Supabase (3º)
-├── netlify/functions/stats.js  # lê dados oficiais (só funciona no Netlify)
 ├── netlify.toml
 └── README.md
 ```
@@ -137,24 +134,8 @@ Registre em registro.br (`.com.br`) ou outro registrador. No serviço escolhido:
 - As capitais aparecem na hora. Para as demais cidades, o site usa a localização informada no cadastro; se não houver, procura a cidade pelo nome (serviço gratuito do OpenStreetMap, 1 consulta por segundo) e guarda o ponto no cadastro novo (`map_lat`/`map_lng`). Esse ponto **não** muda o botão "Ver no mapa" do cartão.
 - Sem rodar o `mapa.sql` tudo continua funcionando; as cidades só demoram um pouco mais para aparecer.
 
-## Dados oficiais nas propostas (o que dá e o que não dá)
-
-Ao colar o link oficial, o site pergunta à função `stats` (no Netlify) e mostra no cartão:
-
-| Link cadastrado | O que aparece |
-|---|---|
-| Câmara dos Deputados (`camara.leg.br`, com `idProposicao=` ou `/propostas-legislativas/ID`) | situação, onde está, autoria, data de apresentação e, se houve votação nominal, **votos Sim e Não dos deputados** (última votação, de preferência no Plenário) |
-| Senado e-Cidadania, Ideia Legislativa (`visualizacaoideia?id=`) | **número de apoios** e a meta de 20 mil |
-
-Também preenche número e resumo do formulário quando o link é da Câmara.
-
-**Limites importantes**
-- Os votos Sim/Não mostrados são os **dos deputados em plenário**, não a enquete popular dos sites. Não encontrei API pública para os votos populares da Câmara nem para a consulta pública do Senado, então eles **não** são exibidos (o botão leva ao site oficial, onde a pessoa vota e vê o placar).
-- Matérias do Senado (PL/PEC no `senado.leg.br`) ainda não têm leitura automática.
-- Os dados aparecem com "Fonte" e horário de leitura, ficam em cache por cerca de 30 minutos e, se o site oficial estiver fora do ar, o cartão simplesmente não mostra números.
-- A leitura foi escrita seguindo a documentação pública e testada com respostas simuladas, **não** contra os servidores reais. Para conferir depois de publicar, abra no navegador
-  `https://SEU-SITE/.netlify/functions/stats?url=` seguido do link oficial codificado. Deve responder `{"ok":true,...}`. Se vier `{"ok":false,...}` com um link válido, me envie a resposta que eu ajusto.
-- Fora do Netlify (ou abrindo o arquivo no computador) a função não existe: o site funciona normalmente, apenas sem esses números.
+## Votos nas propostas
+O site não lê nem mostra votos ou apoios: cada cartão só leva ao site oficial (`.gov.br` / `.leg.br`), onde a pessoa vota e vê o placar. Por isso não há função do Netlify; o site é 100% estático.
 
 ## Como funciona a moderação
 
@@ -182,8 +163,3 @@ Também preenche número e resumo do formulário quando o link é da Câmara.
 ## Mapa
 A geometria dos 27 estados está em `data/brasil-estados.geojson` (malha municipal do IBGE 2025, simplificada, ~70 KB). Carrega na hora, sem depender do IBGE. Se o arquivo faltar, o site tenta o IBGE e, por último, usa o mapa em blocos.
 
-## Enquete da Câmara
-Links `camara.leg.br/enquetes/{id}` (ou `/resultados`) mostram as 5 opções (concordo totalmente … discordo totalmente), lidas da página pública de resultados.
-
-## Consulta pública do Senado (PL, PEC…)
-Links `www12.senado.leg.br/ecidadania/visualizacaomateria?id=…` mostram os votos Sim/Não da consulta pública, lidos da página oficial.
