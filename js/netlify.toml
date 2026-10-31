@@ -1,0 +1,5 @@
+# Configuração do Netlify
+# O site é estático (sem build). A pasta de funções lê dados oficiais das propostas.
+[build]
+  publish = "."
+  functions = "netlify/functions"
