@@ -259,3 +259,4 @@ table.list th { color: var(--muted); font-size: .78rem; text-transform: uppercas
 .enq .eq>span:first-child{margin-right:.5rem}
 .enq .eq>span:nth-child(2){opacity:.8}
 .vbar i.y2{background:#4ea36f}.vbar i.m{background:#9aa3ad}.vbar i.n2{background:#d98a6a}
+.map-stage path.st{fill-rule:evenodd}

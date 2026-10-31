@@ -179,10 +179,8 @@ Também preenche número e resumo do formulário quando o link é da Câmara.
 - Texto da mensagem de compartilhamento: função `shareText` em `js/app.js`.
 - Estados/UF: lista em `js/utils.js`.
 
-## Mapa mais rápido (opcional)
-Baixe o GeoJSON dos estados no IBGE e salve como `data/brasil-estados.geojson`:
-https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?intrarregiao=UF&qualidade=minima&formato=application/vnd.geo+json
-Com o arquivo no repositório o mapa carrega na hora; sem ele, o site tenta o IBGE (4 s) e usa o mapa em blocos.
+## Mapa
+A geometria dos 27 estados está em `data/brasil-estados.geojson` (malha municipal do IBGE 2025, simplificada, ~70 KB). Carrega na hora, sem depender do IBGE. Se o arquivo faltar, o site tenta o IBGE e, por último, usa o mapa em blocos.
 
 ## Enquete da Câmara
 Links `camara.leg.br/enquetes/{id}` (ou `/resultados`) mostram as 5 opções (concordo totalmente … discordo totalmente), lidas da página pública de resultados.
