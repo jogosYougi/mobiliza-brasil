@@ -59,6 +59,11 @@ window.MBOficial = (function () {
       } else {
         body += `<div class="src">Ainda sem votação nominal registrada.</div>`;
       }
+    } else if (d.kind === "materia") {
+      const tot = d.sim + d.nao, y = tot ? Math.round((d.sim / tot) * 100) : 0, n = tot ? 100 - y : 0;
+      body += `<div class="vlegend"><span class="y">Sim ${nf(d.sim)} (${y}%)</span><span class="n">Não ${nf(d.nao)} (${n}%)</span></div>
+        <div class="vbar" role="img" aria-label="Sim ${y}%, Não ${n}%"><i class="y" style="width:${y}%"></i><i class="n" style="width:${n}%"></i></div>
+        <div class="src">Consulta pública do e-Cidadania: opinião de quem votou no site do Senado${d.apuradoEm ? " · apurado em " + dmy(d.apuradoEm) + " " + esc(d.apuradoEm.slice(11)) : ""}.</div>`;
     } else if (d.kind === "ideia") {
       const pct = Math.min(100, Math.round((d.apoios / d.meta) * 100));
       body += row("Apoios", `${nf(d.apoios)} de ${nf(d.meta)}`) +
