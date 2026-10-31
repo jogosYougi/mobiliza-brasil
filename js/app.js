@@ -60,6 +60,20 @@
       (!q || norm([m.title, m.city, m.venue, m.description, m.state].join(" ")).includes(q)));
   }
 
+  // Eventos que o mapa mostra: respeitam busca e "mostrar encerradas", mas não o filtro de estado/cidade
+  function mapEvents() {
+    const q = norm($("#fSearch").value), past = $("#fPast").checked;
+    return ALL.filter(m => (past || !isPast(m)) &&
+      (!q || norm([m.title, m.city, m.venue, m.description, m.state].join(" ")).includes(q)));
+  }
+
+  function selectFromMap({ uf, city }) {
+    $("#fState").value = uf || "";
+    refreshCityFilter();
+    $("#fCity").value = city || "";
+    render();
+  }
+
   function card(m) {
     const past = isPast(m);
     return `
@@ -89,6 +103,7 @@
     const list = filtered();
     $("#grid").innerHTML = list.length ? list.map(card).join("") :
       `<div class="empty"><b>Nenhuma mobilização encontrada</b>Seja o primeiro a cadastrar na sua cidade.<br><br><button class="btn btn-primary" data-open-form>Cadastrar mobilização</button></div>`;
+    if (window.MBMap) MBMap.update({ events: mapEvents(), uf: $("#fState").value, city: $("#fCity").value });
   }
 
   async function load() {
@@ -250,9 +265,14 @@
     if (d.event_date < todayISO()) return fail("A data não pode estar no passado.");
     if (locMode === "link" && $("#mapsUrl").value.trim() && !loc.url) return fail("Link inválido. Use um link do Google Maps (maps.app.goo.gl ou google.com/maps).");
 
-    const payload = { ...d, maps_url: loc.url || null, lat: loc.lat, lng: loc.lng };
+    const payload = { ...d, maps_url: loc.url || null, lat: loc.lat, lng: loc.lng, map_lat: loc.lat, map_lng: loc.lng };
     const b = $("#btnSubmit"); b.disabled = true; b.textContent = "Publicando…";
     try {
+      // ponto da cidade para o mapa (não altera o botão "Ver no mapa"); se demorar, publica sem ele
+      if (payload.map_lat == null && window.MBMap) {
+        const c = await Promise.race([MBMap.coordsFor(d.city, d.state), new Promise(r => setTimeout(() => r(null), 3500))]);
+        if (c) { payload.map_lat = c[0]; payload.map_lng = c[1]; }
+      }
       await api.create(payload);
       closeModals(); toast("Mobilização publicada! 🎉");
       await load();
@@ -265,5 +285,6 @@
   $("#year").textContent = new Date().getFullYear();
   if (!api.live) $("#demoBanner").classList.remove("hidden");
   fillStateSelects();
+  if (window.MBMap) MBMap.init($("#brMap"), { onSelect: selectFromMap });
   load();
 })();

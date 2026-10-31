@@ -58,6 +58,7 @@
         ${g ? `<a class="btn btn-primary btn-sm" href="${esc(g.url)}" target="_blank" rel="noopener noreferrer">${ICON.out} Votar no site oficial</a>` : ""}
         <button class="btn btn-ghost btn-sm" data-act="share">${ICON.share} Compartilhar</button>
       </div>
+      ${g ? `<div class="official" data-of="${esc(g.url)}"></div>` : ""}
       ${host ? `<div class="host">Abre em ${esc(host)}</div>` : ""}
       <button class="link-danger" data-act="del">Solicitar exclusão</button>
     </article>`;
@@ -67,6 +68,25 @@
     const list = filtered();
     $("#grid").innerHTML = list.length ? list.map(card).join("") :
       `<div class="empty"><b>Nenhuma proposta encontrada</b>Cadastre a primeira.<br><br><button class="btn btn-primary" data-open-form>Cadastrar proposta</button></div>`;
+    hydrate();
+  }
+
+  // Carrega os dados oficiais só dos cartões que aparecem na tela
+  let io = null;
+  function hydrate() {
+    if (!window.MBOficial || !("IntersectionObserver" in window)) return;
+    if (!io) io = new IntersectionObserver((entries) => {
+      for (const en of entries) {
+        if (!en.isIntersecting) continue;
+        io.unobserve(en.target);                                   // observamos o cartão inteiro (o bloco vazio é invisível)
+        const el = en.target.querySelector(".official[data-of]");
+        if (!el || el.dataset.loaded) continue;
+        el.dataset.loaded = "1";
+        el.innerHTML = '<div class="skeleton-line"></div>';
+        MBOficial.get(el.dataset.of).then((d) => { el.innerHTML = MBOficial.html(d); });
+      }
+    }, { rootMargin: "240px" });
+    $$(".card").forEach((c) => { if (c.querySelector(".official[data-of]")) io.observe(c); });
   }
 
   async function load() {
@@ -151,6 +171,21 @@
       closeModals(); toast("Pedido enviado. Um moderador vai analisar.");
     } catch (ex) { console.error(ex); err.textContent = "Não foi possível enviar. Tente novamente."; err.classList.remove("hidden"); }
     b.disabled = false;
+  });
+
+  /* ---------- ao colar o link, tenta ler os dados oficiais ---------- */
+  // Aviso por "toast" (flutuante) para não mexer no layout do formulário e fazer o clique em "Publicar" falhar.
+  $("#link").addEventListener("change", async () => {
+    const g = parseGovLink($("#link").value);
+    if (!g || !window.MBOficial) return;
+    const d = await MBOficial.get(g.url);
+    if (!d || (!d.reference && !d.ementa && d.kind !== "ideia")) return;
+    if (d.reference && !$("#reference").value) $("#reference").value = d.reference;
+    if (d.ementa && !$("#summary").value) $("#summary").value = d.ementa;
+    const k = d.reference ? d.reference.split(" ")[0] : "";
+    if (KINDS.includes(k)) $("#kind").value = k;
+    if (d.kind === "ideia") $("#kind").value = "Ideia legislativa";
+    toast("Encontramos no site oficial" + (d.reference ? ": " + d.reference : "") + ". Preenchemos o que estava vazio; confira.");
   });
 
   /* ---------- cadastro ---------- */

@@ -57,7 +57,12 @@
         all.push({ ...m, id: uid(), status: "active", created_at: new Date().toISOString() });
         write(K_MOB, all); return;
       }
-      const { error } = await sb.from("mobilizations").insert(m);
+      let { error } = await sb.from("mobilizations").insert(m);
+      // Se o mapa.sql ainda não foi executado, as colunas map_lat/map_lng não existem: tenta de novo sem elas.
+      if (error && /map_lat|map_lng/.test(error.message || "")) {
+        const { map_lat, map_lng, ...rest } = m;
+        ({ error } = await sb.from("mobilizations").insert(rest));
+      }
       if (error) throw error;
     },
 
