@@ -196,3 +196,59 @@ table.list th { color: var(--muted); font-size: .78rem; text-transform: uppercas
 .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
 .ref { color: var(--muted); font-size: .88rem; font-weight: 600; }
 .host { color: var(--muted); font-size: .8rem; }
+
+/* ---------- hero com mapa ---------- */
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 36px; align-items: center; }
+@media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; gap: 20px; } }
+.map-card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 16px; box-shadow: var(--shadow); }
+.map-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.map-head b { display: block; letter-spacing: -.01em; }
+.map-head small { color: var(--muted); font-size: .82rem; }
+.map-stage { position: relative; aspect-ratio: 545 / 565; max-height: 520px; margin-inline: auto; }
+.map-stage svg { width: 100%; height: 100%; display: block; touch-action: manipulation; }
+.map-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: .9rem; }
+.map-stage .st { fill: var(--line); stroke: var(--surface); stroke-width: 1.2; cursor: pointer; transition: fill .15s, opacity .2s; outline: none; vector-effect: non-scaling-stroke; }
+.map-stage .st.has { fill: color-mix(in srgb, var(--brand) 38%, var(--line)); }
+.map-stage [data-uf]:hover .st, .map-stage path.st:hover { fill: color-mix(in srgb, var(--brand) 62%, var(--line)); }
+.map-stage .st.sel { fill: var(--brand); }
+.map-stage .st.dim { opacity: .35; }
+.map-stage [data-uf]:focus-visible .st, .map-stage path.st:focus-visible { stroke: var(--text); stroke-width: 2; }
+.map-stage .tiles .tl { fill: var(--text); font-size: 17px; font-weight: 800; pointer-events: none; }
+.map-stage .tiles .st.sel ~ .tl { fill: #fff; }
+.map-stage .badge circle { fill: var(--accent); }
+.map-stage .badge text { fill: #1b1500; font-size: 11px; font-weight: 800; pointer-events: none; }
+.map-stage .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; cursor: pointer; vector-effect: non-scaling-stroke; outline: none; }
+.map-stage .dot:hover, .map-stage .dot.sel { fill: #ff7a00; }
+.map-stage .dot:focus-visible { stroke: var(--text); stroke-width: 2.5; }
+.map-stage .dl { fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; font-weight: 700; pointer-events: none; }
+.map-legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: .8rem; margin-top: 6px; }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.lg.has { background: color-mix(in srgb, var(--brand) 38%, var(--line)); }
+.lg.dot { background: var(--accent); border-radius: 50%; }
+
+/* ---------- dados oficiais nos cartões de propostas ---------- */
+.official { font-size: .88rem; display: grid; gap: 8px; }
+.official:empty { display: none; }
+.official .box { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.official .row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.official .k { color: var(--muted); }
+.official .src { color: var(--muted); font-size: .76rem; }
+.vbar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--line); }
+.vbar i { display: block; height: 100%; }
+.vbar .y { background: var(--brand); }
+.vbar .n { background: #d9534f; }
+.vlegend { display: flex; justify-content: space-between; font-weight: 700; font-size: .86rem; gap: 8px; flex-wrap: wrap; }
+.vlegend .y { color: var(--brand-dark); }
+.vlegend .n { color: var(--danger); }
+@media (prefers-color-scheme: dark) { .vlegend .y { color: var(--brand); } }
+.prog { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.prog i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), #6bd39a); min-width: 2px; }
+.skeleton-line { height: 54px; border-radius: 14px; background: linear-gradient(90deg, var(--bg), var(--line), var(--bg)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+
+@media (max-width: 560px) {
+  .hide-sm { display: none; }
+  .topbar .container { row-gap: 2px; }
+  .nav { order: 3; width: 100%; }
+  .topbar .btn-primary { padding: 9px 14px; }
+}
