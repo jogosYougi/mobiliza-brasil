@@ -12,9 +12,12 @@ Site estático (HTML + CSS + JS puro) + banco de dados **Supabase** (PostgreSQL)
 | Compartilhar cada ato (WhatsApp, Telegram, X, Facebook, e-mail, SMS, copiar para Instagram etc.) com mensagem pronta e link direto | `js/app.js` |
 | Pedido de exclusão por qualquer visitante | cartão do ato → "Solicitar exclusão" |
 | **Propostas legislativas** (PL, PEC, ideias): cadastro, filtros, botão "Votar no site oficial", compartilhar, pedir exclusão. **O site não registra votos.** | `propostas.html` + `js/propostas.js` |
+| **Mapa interativo do Brasil** na página inicial: clique em um estado para filtrar (ele é destacado e o mapa dá zoom), pontos nas cidades com ato | `js/map.js` |
+| **Dados oficiais** nos cartões de propostas: situação, autoria, votos Sim/Não dos deputados (Câmara) e apoios de ideias (e-Cidadania) | `netlify/functions/stats.js` + `js/oficial.js` |
 | Painel de moderação (pedidos de exclusão de atos e propostas, remover/restaurar) | `admin.html` + `js/admin.js` |
 | Tabelas, regras de segurança e função de moderação | `database/schema.sql` |
 | Módulo de propostas no banco (rodar **depois** do schema.sql) | `database/propostas.sql` |
+| Ponto da cidade no mapa (opcional, rodar por último) | `database/mapa.sql` |
 
 ```
 mobiliza-brasil/
@@ -27,10 +30,15 @@ mobiliza-brasil/
 │   ├── api.js          # acesso ao banco (e modo demonstração)
 │   ├── app.js          # lógica do site
 │   ├── propostas.js    # lógica da página de propostas
+│   ├── map.js          # mapa interativo do Brasil
+│   ├── oficial.js      # mostra os dados oficiais nos cartões
 │   ├── admin.js        # lógica do painel
 │   └── utils.js
 ├── database/schema.sql    # ← rodar no Supabase (1º)
 ├── database/propostas.sql # ← rodar no Supabase (2º, depois do schema.sql)
+├── database/mapa.sql      # ← rodar no Supabase (3º)
+├── netlify/functions/stats.js  # lê dados oficiais (só funciona no Netlify)
+├── netlify.toml
 └── README.md
 ```
 
@@ -49,7 +57,8 @@ Abra o `index.html` no navegador. Enquanto o `js/config.js` não estiver preench
 1. Crie conta em <https://supabase.com> → **New project** (escolha a região **South America (São Paulo)** e guarde a senha do banco).
 2. No menu **SQL Editor → New query**, cole **todo** o conteúdo de `database/schema.sql` e clique **Run**.
    Depois abra **outra** query, cole **todo** o `database/propostas.sql` e clique **Run** (ativa a página de Propostas).
-   O Supabase mostra "Success. No rows returned" nos dois casos; isso é normal.
+   Por fim, rode também o `database/mapa.sql` (guarda o ponto da cidade para o mapa).
+   O Supabase mostra "Success. No rows returned" nos três casos; isso é normal.
 3. Vá em **Project Settings → API** e copie:
    - **Project URL**
    - **anon public key**
@@ -91,7 +100,7 @@ git push -u origin main
 2. Framework: *None*. Build command: *(vazio)*. Output directory: `/`. **Save and Deploy**.
 3. Link pronto em `https://mobiliza-brasil.pages.dev`.
 
-**B) Netlify** — <https://app.netlify.com> → *Add new site → Import from Git* → repositório → deploy (sem build). Ou arraste a pasta em *Deploy manually*.
+**B) Netlify** (necessário para os dados oficiais das propostas; use **deploy pelo GitHub**, porque arrastar a pasta não publica a função) — <https://app.netlify.com> → *Add new site → Import from Git* → repositório → deploy (sem build). Ou arraste a pasta em *Deploy manually*.
 
 **C) Vercel** — <https://vercel.com/new> → importar repositório → *Framework: Other* → Deploy.
 
@@ -120,6 +129,33 @@ Registre em registro.br (`.com.br`) ou outro registrador. No serviço escolhido:
 - A etiqueta "Sugerem votar a favor/contra" é a opinião de quem cadastrou, não do site.
 - Compartilhar e "Solicitar exclusão" funcionam como nos atos. Os pedidos aparecem no mesmo painel, e há uma aba **Propostas** para remover ou restaurar.
 
+## Mapa interativo
+
+- O desenho dos estados vem da API pública do **IBGE**, carregada no navegador de quem visita e guardada em cache.
+- Se o IBGE não responder, o site mostra automaticamente um **mapa de reserva** (grade com os 27 estados), que também é clicável e filtra a lista.
+- Clicar em um estado destaca-o, dá zoom, filtra a lista e mostra só as cidades com ato naquele estado. Clicar em um ponto filtra pela cidade. Os filtros e o mapa andam juntos nos dois sentidos.
+- As capitais aparecem na hora. Para as demais cidades, o site usa a localização informada no cadastro; se não houver, procura a cidade pelo nome (serviço gratuito do OpenStreetMap, 1 consulta por segundo) e guarda o ponto no cadastro novo (`map_lat`/`map_lng`). Esse ponto **não** muda o botão "Ver no mapa" do cartão.
+- Sem rodar o `mapa.sql` tudo continua funcionando; as cidades só demoram um pouco mais para aparecer.
+
+## Dados oficiais nas propostas (o que dá e o que não dá)
+
+Ao colar o link oficial, o site pergunta à função `stats` (no Netlify) e mostra no cartão:
+
+| Link cadastrado | O que aparece |
+|---|---|
+| Câmara dos Deputados (`camara.leg.br`, com `idProposicao=` ou `/propostas-legislativas/ID`) | situação, onde está, autoria, data de apresentação e, se houve votação nominal, **votos Sim e Não dos deputados** (última votação, de preferência no Plenário) |
+| Senado e-Cidadania, Ideia Legislativa (`visualizacaoideia?id=`) | **número de apoios** e a meta de 20 mil |
+
+Também preenche número e resumo do formulário quando o link é da Câmara.
+
+**Limites importantes**
+- Os votos Sim/Não mostrados são os **dos deputados em plenário**, não a enquete popular dos sites. Não encontrei API pública para os votos populares da Câmara nem para a consulta pública do Senado, então eles **não** são exibidos (o botão leva ao site oficial, onde a pessoa vota e vê o placar).
+- Matérias do Senado (PL/PEC no `senado.leg.br`) ainda não têm leitura automática.
+- Os dados aparecem com "Fonte" e horário de leitura, ficam em cache por cerca de 30 minutos e, se o site oficial estiver fora do ar, o cartão simplesmente não mostra números.
+- A leitura foi escrita seguindo a documentação pública e testada com respostas simuladas, **não** contra os servidores reais. Para conferir depois de publicar, abra no navegador
+  `https://SEU-SITE/.netlify/functions/stats?url=` seguido do link oficial codificado. Deve responder `{"ok":true,...}`. Se vier `{"ok":false,...}` com um link válido, me envie a resposta que eu ajusto.
+- Fora do Netlify (ou abrindo o arquivo no computador) a função não existe: o site funciona normalmente, apenas sem esses números.
+
 ## Como funciona a moderação
 
 1. Qualquer pessoa clica em **Solicitar exclusão** num ato e informa o motivo (contato opcional).
@@ -130,6 +166,7 @@ Registre em registro.br (`.com.br`) ou outro registrador. No serviço escolhido:
 ## Segurança e boas práticas
 
 - **Regras no banco (RLS):** visitantes só leem atos ativos, cadastram atos e abrem pedidos; só moderadores leem pedidos e alteram status.
+- **Mapa e dados oficiais** só leem serviços públicos (IBGE, OpenStreetMap, Câmara, Senado); nenhuma chave secreta é usada.
 - **Anti-spam básico:** campo-isca (honeypot) nos formulários e limites de tamanho no banco. Se houver abuso, ative **CAPTCHA** em Supabase → Authentication → Attack Protection, ou coloque o Cloudflare Turnstile na frente do formulário.
 - **Aprovação prévia (opcional):** para só publicar depois de revisar, troque no `schema.sql` o `default 'active'` por `'pending'`, ajuste as policies (`status = 'pending'` no insert) e adicione uma aba de aprovação no painel.
 - **Links de mapa:** só são aceitos links `https` do Google Maps.
