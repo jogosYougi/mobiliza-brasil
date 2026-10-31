@@ -18,7 +18,16 @@
     e.preventDefault(); show("#loginErr", false);
     const b = $("#btnLogin"); b.disabled = true;
     try { await api.login($("#email").value.trim(), $("#password").value); await init(); }
-    catch { $("#loginErr").textContent = "E-mail ou senha inválidos."; show("#loginErr"); }
+    catch (ex) {
+      const msg = String((ex && ex.message) || ex || "");
+      let t = "Não foi possível entrar: " + msg;
+      if (/invalid login credentials/i.test(msg)) t = "E-mail ou senha inválidos.";
+      else if (/not confirmed/i.test(msg)) t = "E-mail ainda não confirmado no Supabase.";
+      else if (/api key|apikey|jwt/i.test(msg)) t = "Chave do Supabase inválida. Confira a chave anon public em js/config.js.";
+      else if (/failed to fetch|network/i.test(msg)) t = "Sem conexão com o Supabase. Confira a URL em js/config.js.";
+      console.error("Erro de login:", ex);
+      $("#loginErr").textContent = t; show("#loginErr");
+    }
     b.disabled = false;
   });
   $("#btnLogout").addEventListener("click", async () => { await api.logout(); location.reload(); });
