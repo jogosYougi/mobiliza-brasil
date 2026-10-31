@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propostas legislativas — Mobiliza Brasil</title>
+  <meta name="description" content="Divulgue PLs, PECs e ideias legislativas e leve as pessoas ao site oficial do governo para votar. O Mobiliza Brasil não registra votos.">
+  <meta name="theme-color" content="#0e8f4f">
+  <meta property="og:title" content="Propostas legislativas — Mobiliza Brasil">
+  <meta property="og:description" content="Veja propostas em tramitação e vá ao site oficial para votar.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230e8f4f'/%3E%3Cpath d='M50 18c-12 0-22 9-22 21 0 16 22 41 22 41s22-25 22-41c0-12-10-21-22-21zm0 29a8 8 0 110-16 8 8 0 010 16z' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="demoBanner" class="demo-banner hidden">
+    ⚠️ <b>Modo demonstração</b> — os dados ficam só no seu navegador. Configure o Supabase em <code>js/config.js</code> para publicar de verdade.
+  </div>
+
+  <header class="topbar">
+    <div class="container">
+      <a class="logo" href="./">
+        <span class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.4 4 9.6 4 15.5 12 22 12 22s8-6.5 8-12.4C20 5.4 16.4 2 12 2zm0 10.5a3 3 0 110-6 3 3 0 010 6z"/></svg></span>
+        Mobiliza Brasil
+      </a>
+      <nav class="nav" aria-label="Principal">
+        <a href="./">Mobilizações</a>
+        <a class="on" href="propostas.html">Propostas</a>
+      </nav>
+      <button class="btn btn-primary" data-open-form>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Cadastrar proposta
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Propostas <span>em debate no país.</span></h1>
+      <p>Cadastre um PL, uma PEC ou uma ideia legislativa e divulgue. A votação acontece no <b>site oficial do governo</b> — aqui você só encontra e compartilha o caminho.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#lista">Ver propostas</a>
+        <button class="btn btn-ghost" data-open-form>Cadastrar proposta</button>
+      </div>
+    </section>
+
+    <div class="notice">
+      <span style="font-size:1.4rem">🗳️</span>
+      <div><b>Este site não registra votos.</b>
+        Ao clicar em “Votar no site oficial”, você será levado a um endereço <code>.gov.br</code> ou <code>.leg.br</code>, onde o voto é feito e contabilizado. Sempre confira o endereço no navegador.</div>
+    </div>
+
+    <section id="lista" aria-label="Lista de propostas">
+      <div class="filters f3">
+        <input id="fSearch" type="search" placeholder="Buscar por título, número ou resumo…" aria-label="Buscar">
+        <select id="fKind" aria-label="Tipo"><option value="">Todos os tipos</option></select>
+        <select id="fStance" aria-label="Voto sugerido">
+          <option value="">Qualquer sugestão de voto</option>
+          <option value="favor">Sugerem votar a favor</option>
+          <option value="contra">Sugerem votar contra</option>
+          <option value="informativo">Apenas informativo</option>
+        </select>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <span>© <span id="year"></span> Mobiliza Brasil — plataforma colaborativa.</span>
+      <span>Conteúdo cadastrado por usuários. Algo errado? Use “Solicitar exclusão” no cartão.</span>
+    </div>
+  </footer>
+
+  <!-- ===== Modal: cadastrar proposta ===== -->
+  <div class="modal" id="mForm" role="dialog" aria-modal="true" aria-labelledby="mFormTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div><h2 id="mFormTitle">Cadastrar proposta</h2><p>O voto será feito no site oficial indicado pelo link.</p></div>
+        <button class="icon-btn" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <form class="form" id="form" novalidate>
+        <div><label class="lbl" for="title">Título *</label>
+          <input id="title" maxlength="140" required placeholder="Ex.: Isenção de imposto para…"></div>
+
+        <div class="row2">
+          <div><label class="lbl" for="kind">Tipo *</label>
+            <select id="kind" required></select></div>
+          <div><label class="lbl" for="reference">Número (opcional)</label>
+            <input id="reference" maxlength="60" placeholder="Ex.: PL 1234/2025"></div>
+        </div>
+
+        <div><label class="lbl" for="summary">Resumo *</label>
+          <textarea id="summary" maxlength="2000" required placeholder="Explique em poucas palavras o que a proposta muda e por que importa."></textarea></div>
+
+        <div><label class="lbl" for="link">Link no site oficial do governo *</label>
+          <input id="link" type="url" inputmode="url" required placeholder="https://www.camara.leg.br/…  ou  https://www12.senado.leg.br/…">
+          <small class="hint">Aceitamos só endereços oficiais terminados em <b>.gov.br</b> ou <b>.leg.br</b> (Câmara, Senado, gov.br, assembleias, câmaras municipais). É a página onde a pessoa vai votar.</small></div>
+
+        <div><label class="lbl" for="stance">Qual voto você sugere? *</label>
+          <select id="stance" required>
+            <option value="favor">Sugiro votar A FAVOR</option>
+            <option value="contra">Sugiro votar CONTRA</option>
+            <option value="informativo" selected>Apenas divulgar (sem sugerir voto)</option>
+          </select>
+          <small class="hint">Aparece como uma etiqueta no cartão. Cada pessoa decide o próprio voto no site oficial.</small></div>
+
+        <input class="hp" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="err hidden" id="formErr"></div>
+        <button class="btn btn-primary" id="btnSubmit" type="submit">Publicar proposta</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal: compartilhar ===== -->
+  <div class="modal" id="mShare" role="dialog" aria-modal="true" aria-labelledby="mShareTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div><h2 id="mShareTitle">Compartilhar</h2><p id="shareSub"></p></div>
+        <button class="icon-btn" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="preview" id="sharePreview"></div>
+      <div class="share-list" id="shareList"></div>
+    </div>
+  </div>
+
+  <!-- ===== Modal: pedir exclusão ===== -->
+  <div class="modal" id="mDel" role="dialog" aria-modal="true" aria-labelledby="mDelTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div><h2 id="mDelTitle">Solicitar exclusão</h2><p id="delSub"></p></div>
+        <button class="icon-btn" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <form class="form" id="delForm" novalidate>
+        <div><label class="lbl" for="delReason">Motivo *</label>
+          <textarea id="delReason" maxlength="1000" required placeholder="Ex.: link errado, informação enganosa, proposta já arquivada, duplicada…"></textarea></div>
+        <div><label class="lbl" for="delContact">Seu contato (opcional)</label>
+          <input id="delContact" maxlength="160" placeholder="E-mail ou WhatsApp, caso precisemos confirmar">
+          <small class="hint">Um moderador vai analisar o pedido antes de remover.</small></div>
+        <input class="hp" id="delWebsite" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="err hidden" id="delErr"></div>
+        <button class="btn btn-danger" type="submit" id="btnDel">Enviar pedido</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/propostas.js"></script>
+</body>
+</html>

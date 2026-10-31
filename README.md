@@ -11,21 +11,26 @@ Site estático (HTML + CSS + JS puro) + banco de dados **Supabase** (PostgreSQL)
 | Localização: **detectar automaticamente** ou **colar link do Google Maps** | `js/app.js` |
 | Compartilhar cada ato (WhatsApp, Telegram, X, Facebook, e-mail, SMS, copiar para Instagram etc.) com mensagem pronta e link direto | `js/app.js` |
 | Pedido de exclusão por qualquer visitante | cartão do ato → "Solicitar exclusão" |
-| Painel de moderação (aprovar/recusar pedidos, remover/restaurar atos) | `admin.html` + `js/admin.js` |
+| **Propostas legislativas** (PL, PEC, ideias): cadastro, filtros, botão "Votar no site oficial", compartilhar, pedir exclusão. **O site não registra votos.** | `propostas.html` + `js/propostas.js` |
+| Painel de moderação (pedidos de exclusão de atos e propostas, remover/restaurar) | `admin.html` + `js/admin.js` |
 | Tabelas, regras de segurança e função de moderação | `database/schema.sql` |
+| Módulo de propostas no banco (rodar **depois** do schema.sql) | `database/propostas.sql` |
 
 ```
 mobiliza-brasil/
-├── index.html          # site público
+├── index.html          # site público (mobilizações)
+├── propostas.html      # propostas legislativas (link para o site oficial)
 ├── admin.html          # painel de moderação (login)
 ├── css/style.css
 ├── js/
 │   ├── config.js       # ← VOCÊ preenche (URL e chave do Supabase)
 │   ├── api.js          # acesso ao banco (e modo demonstração)
 │   ├── app.js          # lógica do site
+│   ├── propostas.js    # lógica da página de propostas
 │   ├── admin.js        # lógica do painel
 │   └── utils.js
-├── database/schema.sql # ← rodar no Supabase
+├── database/schema.sql    # ← rodar no Supabase (1º)
+├── database/propostas.sql # ← rodar no Supabase (2º, depois do schema.sql)
 └── README.md
 ```
 
@@ -43,6 +48,8 @@ Abra o `index.html` no navegador. Enquanto o `js/config.js` não estiver preench
 
 1. Crie conta em <https://supabase.com> → **New project** (escolha a região **South America (São Paulo)** e guarde a senha do banco).
 2. No menu **SQL Editor → New query**, cole **todo** o conteúdo de `database/schema.sql` e clique **Run**.
+   Depois abra **outra** query, cole **todo** o `database/propostas.sql` e clique **Run** (ativa a página de Propostas).
+   O Supabase mostra "Success. No rows returned" nos dois casos; isso é normal.
 3. Vá em **Project Settings → API** e copie:
    - **Project URL**
    - **anon public key**
@@ -104,6 +111,14 @@ Registre em registro.br (`.com.br`) ou outro registrador. No serviço escolhido:
 - [ ] Remover os atos de teste pelo painel
 
 ---
+
+## Propostas legislativas (PL, PEC, ideias)
+
+- Qualquer pessoa cadastra: título, tipo (PL, PEC, PLP, PDL, ideia legislativa, consulta pública, outro), número (opcional), resumo, **link oficial** e a sugestão de voto (a favor, contra ou apenas informativo).
+- **O site não vota nem conta votos.** O botão "Votar no site oficial" abre o link cadastrado, e a pessoa vota lá.
+- **Só são aceitos links `https` de domínios `.gov.br` e `.leg.br`** (Câmara, Senado, gov.br, assembleias, câmaras municipais). A regra existe no site e também no banco, então não dá para burlar pela API. Isso evita que o espaço seja usado para divulgar links falsos.
+- A etiqueta "Sugerem votar a favor/contra" é a opinião de quem cadastrou, não do site.
+- Compartilhar e "Solicitar exclusão" funcionam como nos atos. Os pedidos aparecem no mesmo painel, e há uma aba **Propostas** para remover ou restaurar.
 
 ## Como funciona a moderação
 

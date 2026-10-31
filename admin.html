@@ -50,6 +50,7 @@
       <div class="tabs">
         <button class="on" data-tab="req">Pedidos de exclusão <span class="badge hidden" id="badge">0</span></button>
         <button data-tab="all">Todas as mobilizações</button>
+        <button data-tab="props">Propostas</button>
       </div>
 
       <div id="tabReq">
@@ -64,6 +65,15 @@
           <table class="list">
             <thead><tr><th>Ato</th><th>Local</th><th>Data</th><th>Status</th><th></th></tr></thead>
             <tbody id="allBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tabProps" class="hidden">
+        <div class="panel table-wrap" style="padding:8px 14px">
+          <table class="list">
+            <thead><tr><th>Proposta</th><th>Tipo</th><th>Link oficial</th><th>Status</th><th></th></tr></thead>
+            <tbody id="propsBody"></tbody>
           </table>
         </div>
       </div>
